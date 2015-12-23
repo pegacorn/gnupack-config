@@ -29,6 +29,7 @@
   (add-to-list 'load-path default-directory)
   (normal-top-level-add-subdirs-to-load-path)
   )
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mew" t)
 
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
@@ -40,6 +41,7 @@
 
 ;; テキストファイル／新規バッファの文字コード
 (prefer-coding-system 'utf-8-unix)
+;(prefer-coding-system 'cp932-dos)
 
 ;; ファイル名の文字コード
 (set-file-name-coding-system 'utf-8-unix)
@@ -49,6 +51,16 @@
 
 ;; サブプロセスのデフォルト文字コード
 (setq default-process-coding-system '(undecided-dos . utf-8-unix))
+
+;; 新規ファイルのデフォルト文字コード
+;(setq default-buffer-file-coding-system 'cp932-dos)
+
+;; Unicode（内部コード）→CP932変換時に波ダッシュ(U+301C)を波ダッシュ(0x8160)に変換するよう設定する。
+;; 波ダッシュと同様の変換問題のある文字も変わる。
+;; 対象文字は、"lisp/language/japanese.el"で定義されている
+;; japanese-ucs-jis-to-cp932-mapを参照。
+(coding-system-put 'cp932 :encode-translation-table
+                   (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
 
 ;; 環境依存文字 文字化け対応
 (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
@@ -62,6 +74,13 @@
 
 ;; Altキーを使用せずにMetaキーを使用（有効：t、無効：nil）
 (setq w32-alt-is-meta t)
+
+;; C-hでbackspaceする／C-S-hでhelpする
+(keyboard-translate ?\C-h ?\C-?)
+;(keyboard-translate ?\C-? ?\C-h)
+;(keyboard-translate ?\C-h ?\177)
+;(keyboard-translate ?\177 ?\C-h)
+;(define-key key-translation-map (kbd "C-h") (kbd "<DEL>"))
 
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
@@ -91,20 +110,20 @@
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
 
 ;; デフォルト フォント
-;; (set-face-attribute 'default nil :family "Migu 1M" :height 110)
-(set-face-font 'default "Migu 1M-11:antialias=standard")
+;; (set-face-attribute 'default nil :family "Migu 1M" :height 120)
+(set-face-font 'default "Migu 1M-12:antialias=standard")
 
 ;; プロポーショナル フォント
-;; (set-face-attribute 'variable-pitch nil :family "Migu 1M" :height 110)
-(set-face-font 'variable-pitch "Migu 1M-11:antialias=standard")
+;; (set-face-attribute 'variable-pitch nil :family "Migu 1M" :height 120)
+(set-face-font 'variable-pitch "Migu 1M-12:antialias=standard")
 
 ;; 等幅フォント
-;; (set-face-attribute 'fixed-pitch nil :family "Migu 1M" :height 110)
-(set-face-font 'fixed-pitch "Migu 1M-11:antialias=standard")
+;; (set-face-attribute 'fixed-pitch nil :family "Migu 1M" :height 120)
+(set-face-font 'fixed-pitch "Migu 1M-12:antialias=standard")
 
 ;; ツールチップ表示フォント
-;; (set-face-attribute 'tooltip nil :family "Migu 1M" :height 90)
-(set-face-font 'tooltip "Migu 1M-9:antialias=standard")
+;; (set-face-attribute 'tooltip nil :family "Migu 1M" :height 100)
+(set-face-font 'tooltip "Migu 1M-10:antialias=standard")
 
 ;;; fontset
 
@@ -124,14 +143,14 @@
 
 (setq default-frame-alist
       (append '((width                . 85)  ; フレーム幅
-                (height               . 38 ) ; フレーム高
+                (height               . 60 ) ; フレーム高
              ;; (left                 . 70 ) ; 配置左位置
              ;; (top                  . 28 ) ; 配置上位置
                 (line-spacing         . 0  ) ; 文字間隔
                 (left-fringe          . 10 ) ; 左フリンジ幅
                 (right-fringe         . 11 ) ; 右フリンジ幅
                 (menu-bar-lines       . 1  ) ; メニューバー
-                (tool-bar-lines       . 1  ) ; ツールバー
+                (tool-bar-lines       . 0  ) ; ツールバー
                 (vertical-scroll-bars . 1  ) ; スクロールバー
                 (scroll-bar-width     . 17 ) ; スクロールバー幅
                 (cursor-type          . box) ; カーソル種別
@@ -141,14 +160,16 @@
 
 ;; フレーム タイトル
 (setq frame-title-format
-      '("emacs " emacs-version (buffer-file-name " - %f")))
+      (format "%%b - %s-%s" invocation-name emacs-version))
 
 ;; 初期画面の非表示（有効：t、無効：nil）
 (setq inhibit-startup-message nil)
 (setq inhibit-startup-screen nil)
 
 ;; フルスクリーン化
-(global-set-key (kbd "<M-return>") 'toggle-frame-fullscreen)
+;(global-set-key (kbd "<M-return>") 'toggle-frame-fullscreen)
+;; 最大化
+(global-set-key (kbd "<f12>") 'toggle-frame-maximized)
 
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
@@ -219,7 +240,7 @@
 ;; 同一バッファ名にディレクトリ付与
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
-(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+(setq uniquify-buffer-name-style 'post-forward)
 (setq uniquify-ignore-buffers-re "*[^*]+*")
 
 
@@ -241,7 +262,7 @@
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
 
 ;; カーソルの点滅（有効：1、無効：0）
-(blink-cursor-mode 0)
+(blink-cursor-mode 1)
 
 ;; 非アクティブウィンドウのカーソル表示（有効：t、無効：nil）
 (setq-default cursor-in-non-selected-windows t)
@@ -261,11 +282,11 @@
 ;; IME無効／有効時のカーソルカラー設定
 (advice-add 'ime-force-on
             :before (lambda (&rest args)
-                      (if (facep 'cursor-ime-on)
-                          (let ( (fg (face-attribute 'cursor-ime-on :foreground))
-                                 (bg (face-attribute 'cursor-ime-on :background)) )
+    (if (facep 'cursor-ime-on)
+        (let ( (fg (face-attribute 'cursor-ime-on :foreground))
+               (bg (face-attribute 'cursor-ime-on :background)) )
                             (set-face-attribute 'cursor nil :foreground fg :background bg) )
-                        )
+          )
                       ))
 (advice-add 'ime-force-off
             :before (lambda (&rest args)
@@ -273,7 +294,7 @@
                           (let ( (fg (face-attribute 'cursor-ime-off :foreground))
                                  (bg (face-attribute 'cursor-ime-off :background)) )
                             (set-face-attribute 'cursor nil :foreground fg :background bg) )
-                        )
+      )
                       ))
 
 ;; バッファ切り替え時の状態引継ぎ設定（有効：t、無効：nil）
@@ -310,41 +331,7 @@
 (global-linum-mode t)
 
 ;; 文字サイズ
-(set-face-attribute 'linum nil :height 0.75)
-
-
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
-;;; @ screen - tabbar                                               ;;;
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
-
-(require 'tabbar)
-
-;; tabbar有効化（有効：t、無効：nil）
-(call-interactively 'tabbar-mode t)
-
-;; ボタン非表示
-(dolist (btn '(tabbar-buffer-home-button
-               tabbar-scroll-left-button
-               tabbar-scroll-right-button))
-  (set btn (cons (cons "" nil) (cons "" nil)))
-  )
-
-;; タブ切替にマウスホイールを使用（有効：0、無効：-1）
-(call-interactively 'tabbar-mwheel-mode -1)
-(remove-hook 'tabbar-mode-hook      'tabbar-mwheel-follow)
-(remove-hook 'mouse-wheel-mode-hook 'tabbar-mwheel-follow)
-
-;; タブグループを使用（有効：t、無効：nil）
-(defvar tabbar-buffer-groups-function nil)
-(setq tabbar-buffer-groups-function nil)
-
-;; タブの表示間隔
-(defvar tabbar-separator nil)
-(setq tabbar-separator '(1.0))
-
-;; タブ切り替え
-(global-set-key (kbd "<C-tab>") 'tabbar-forward-tab)
-(global-set-key (kbd "C-q")     'tabbar-backward-tab)
+(set-face-attribute 'linum nil :height 0.9)
 
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
@@ -352,7 +339,7 @@
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
 
 ;; 大文字・小文字を区別しないでサーチ（有効：t、無効：nil）
-(setq-default case-fold-search nil)
+(setq-default case-fold-search t)
 
 ;; インクリメント検索時に縦スクロールを有効化（有効：t、無効：nil）
 (setq isearch-allow-scroll nil)
@@ -370,8 +357,8 @@
 (define-key isearch-mode-map (kbd "TAB") 'isearch-yank-word)
 
 ;; C-gで検索を終了
-(define-key isearch-mode-map (kbd "C-g")
-  '(lambda() (interactive) (isearch-done)))
+;(define-key isearch-mode-map (kbd "C-g")
+;  '(lambda() (interactive) (isearch-done)))
 
 ;; 日本語の検索文字列をミニバッファに表示
 (define-key isearch-mode-map (kbd "<compend>")
@@ -395,33 +382,7 @@
 (require 'hiwin)
 
 ;; hiwin-modeを有効化
-(hiwin-activate)
-
-
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
-;;; @ search - migemo                                               ;;;
-;;;   https://github.com/emacs-jp/migemo                            ;;;
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
-
-(require 'migemo)
-
-(defvar migemo-command nil)
-(setq migemo-command "cmigemo")
-
-(defvar migemo-options nil)
-(setq migemo-options '("-q" "--emacs"))
-
-(defvar migemo-dictionary nil)
-(setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
-
-(defvar migemo-user-dictionary nil)
-
-(defvar migemo-regex-dictionary nil)
-
-(defvar migemo-coding-system nil)
-(setq migemo-coding-system 'utf-8-unix)
-
-(load-library "migemo")
+;(hiwin-activate)
 
 
 ;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
@@ -477,7 +438,7 @@
 (setq scroll-preserve-screen-position t)
 
 ;; スクロール開始の残り行数
-(setq scroll-margin 0)
+(setq scroll-margin 3)
 
 ;; スクロール時の行数
 (setq scroll-conservatively 10000)
@@ -486,7 +447,7 @@
 (setq scroll-step 0)
 
 ;; 画面スクロール時の重複表示する行数
-(setq next-screen-context-lines 1)
+(setq next-screen-context-lines 3)
 
 ;; キー入力中の画面更新を抑止（有効：t、無効：nil）
 (setq redisplay-dont-pause t)
@@ -501,7 +462,7 @@
 (setq hscroll-step 1)
 
 ;; スクロールダウン
-(global-set-key (kbd "C-z") 'scroll-down)
+;(global-set-key (kbd "C-z") 'scroll-down)
 
 ;; バッファの最後までスクロールダウン
 (defadvice scroll-down (around scroll-down activate compile)
@@ -584,6 +545,184 @@
 )
 
 
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ Aspell                                                        ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(setq-default ispell-program-name "aspell")
+(eval-after-load "ispell"
+ '(add-to-list 'ispell-skip-region-alist '("[^\000-\377]+")))
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ lv                                                            ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(setq grep-host-defaults-alist nil) ;; これはおまじないだと思ってください
+(setq grep-template "lgrep -Au8 -Ia <C> -n <R> <F> <N>")
+(setq grep-find-template "find . <X> -type f <F> -print0 | xargs -0 -e lgrep -Au8 -Ia <C> -n <R> <N>") 
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ mwim - Move to the beginning/end of line or code              ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+;(global-set-key (kbd "C-a") 'mwim-beginning-of-code-or-line)
+;(global-set-key (kbd "C-e") 'mwim-end-of-code-or-line)
+(global-set-key (kbd "C-a") 'mwim-beginning-of-line-or-code)
+(global-set-key (kbd "C-e") 'mwim-end-of-line-or-code)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ easy-kill - kill & mark things easily                         ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(global-set-key (kbd "M-w") 'easy-kill)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ runner - Improved "open with" suggestions for dired           ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(require 'runner)
+(require 'dired)
+(define-key dired-mode-map (kbd "C-c !") 'runner-add-extension)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ auto-complete - Auto Completion for GNU Emacs                 ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(require 'auto-complete-config)
+(add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
+(ac-config-default)
+(setq-default ac-sources
+              (delq 'ac-source-filename (default-value 'ac-sources)))
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ auto-complete-c-headers - An auto-complete source for C/C++ header files ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(setq achead:include-directories
+      (list
+       "."
+; `gcc -xc++ -E -v -`
+       "/usr/lib/gcc/i686-pc-cygwin/4.9.3/include/c++"
+       "/usr/lib/gcc/i686-pc-cygwin/4.9.3/include/c++/i686-pc-cygwin"
+       "/usr/lib/gcc/i686-pc-cygwin/4.9.3/include/c++/backward"
+       "/usr/lib/gcc/i686-pc-cygwin/4.9.3/include"
+       "/usr/local/include"
+       "/usr/lib/gcc/i686-pc-cygwin/4.9.3/include-fixed"
+       "/usr/include"
+       "/usr/lib/gcc/i686-pc-cygwin/4.9.3/../../../../include/w32api"
+       ))
+(defun my:ac-c-headers-init ()
+  (require 'auto-complete-c-headers)
+  (add-to-list 'ac-sources 'ac-source-c-headers t)
+)
+(add-hook 'c++-mode-hook 'my:ac-c-headers-init)
+(add-hook 'c-mode-hook 'my:ac-c-headers-init)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ auto-complete-clang-async - Auto Completion source for clang for GNU Emacs ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(require 'auto-complete-clang-async)
+(defun ac-cc-mode-setup ()
+  (add-to-list 'ac-sources 'ac-source-clang-async t)
+  (ac-clang-launch-completion-process)
+)
+(defun my-ac-config ()
+  (add-hook 'c-mode-common-hook 'ac-cc-mode-setup)
+  (add-hook 'auto-complete-mode-hook 'ac-common-setup)
+  (global-auto-complete-mode t))
+(my-ac-config)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ srefactor - A refactoring tool based on Semantic parser framework ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(require 'srefactor)
+(require 'srefactor-lisp)
+
+;; OPTIONAL: ADD IT ONLY IF YOU USE C/C++. 
+(semantic-mode 1) ;; -> this is optional for Lisp
+
+(define-key c-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
+(define-key c++-mode-map (kbd "M-RET") 'srefactor-refactor-at-point)
+(global-set-key (kbd "M-RET o") 'srefactor-lisp-one-line)
+(global-set-key (kbd "M-RET m") 'srefactor-lisp-format-sexp)
+(global-set-key (kbd "M-RET d") 'srefactor-lisp-format-defun)
+(global-set-key (kbd "M-RET b") 'srefactor-lisp-format-buffer)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ clang-format - Format code using clang-format                 ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+;(global-set-key [C-M-tab] 'clang-format-region)
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ markdown-mode - Markdown-formatted text files                 ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(setq markdown-command "Markdown.pl")
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ itail - An interactive tail mode                              ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(autoload 'itail "itail" nil t)
+;;; modelineに実行中のコマンドを表示する
+(setq itail-fancy-mode-line t)
+;;; ハイライトする正規表現とフェイス
+;;; この例はWebサーバですが、各自設定してください
+(setq itail-highlight-list
+      '(;; errorとwarningを赤で表示
+        ("[eE]rror\\|[wW]arning" . hi-red-b)
+        ;; HTTPのmethodを緑で表示
+        ("GET\\|POST\\|DELETE\\|PUT" . hi-green-b)
+        ;; IPアドレスを文字列の色で表示
+        ("[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}\\.[0-9]\\{1,3\\}" . font-lock-string-face)))
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ 言語に関する設定                                              ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(load "~/.emacs.d/init-lang")
+
+
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+;;; @ 電子メールに関する設定                                        ;;;
+;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ;;;
+
+(load "~/.emacs.d/init-mail.mew-6")
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(column-number-mode t)
+ '(read-buffer-completion-ignore-case t)
+ '(save-place t nil (saveplace))
+ '(show-paren-mode t)
+ '(sort-fold-case t t)
+ '(tab-width 4)
+ '(tool-bar-mode nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 ;; Local Variables:
 ;; coding: utf-8
 ;; mode: emacs-lisp
